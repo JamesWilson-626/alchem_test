@@ -16,7 +16,6 @@ python -m management-console-backend.src.main
 ```
 python .\management-console-backend\src\event_simulator.py
 ```
----
 # Test 
 ```
 pytest -v management-console-backend/tests/test_api.py
