@@ -3,6 +3,7 @@ from typing import List
 from .models import LogEntry
 from . import database_handler
 from contextlib import asynccontextmanager
+from fastapi.middleware.cors import CORSMiddleware
 
 # Define the lifespan event handler
 @asynccontextmanager
@@ -11,8 +12,16 @@ async def lifespan(app: FastAPI):
     database_handler.initialize_database() 
     yield
 
-
 app = FastAPI(lifespan=lifespan)
+
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["http://localhost:4200"],  # Your Angular app URL
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
+
 
 # API Endpoints
 @app.post("/logs/", response_model=LogEntry)
@@ -63,7 +72,7 @@ def clear_logs():
 if __name__ == "__main__":
     import uvicorn
     uvicorn.run(
-        "management_console.src.main:app", 
+        "management-console-backend.src.main:app", 
         host="127.0.0.1",
         port=8000,
         reload=True

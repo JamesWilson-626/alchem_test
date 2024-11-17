@@ -2,7 +2,7 @@ import sqlite3
 from datetime import datetime
 from .models import LogEntry
 
-DB_PATH = 'management_console/data/logs.db'
+DB_PATH = 'management-console-backend/data/logs.db'
 
 def initialize_database():
     """Initialize the database and create the logs table if it doesn't exist."""
