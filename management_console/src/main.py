@@ -47,7 +47,7 @@ def on_startup():
 if __name__ == "__main__":
     import uvicorn
     uvicorn.run(
-        "management_console.src.main:app",  # Updated path to match package structure
+        "management_console.src.main:app", 
         host="127.0.0.1",
         port=8000,
         reload=True

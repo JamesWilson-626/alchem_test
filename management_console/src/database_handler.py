@@ -25,10 +25,11 @@ def add_log(entry: LogEntry):
     cursor = conn.cursor()
     cursor.execute(
         "INSERT INTO logs (datetime, source, log) VALUES (?, ?, ?)",
-        (entry.datetime, entry.source, entry.log)
+        (entry.timestamp.isoformat(), entry.source, entry.log)  # Convert timestamp to ISO 8601 string
     )
     conn.commit()
     conn.close()
+
 
 def delete_log(log_id: int) -> bool:
     """Delete a log entry by ID. Returns True if deleted, False if not found."""
@@ -46,24 +47,25 @@ def update_log(log_id: int, updated_entry: LogEntry) -> bool:
     cursor = conn.cursor()
     cursor.execute(
         "UPDATE logs SET datetime = ?, source = ?, log = ? WHERE uid = ?",
-        (updated_entry.datetime, updated_entry.source, updated_entry.log, log_id)
+        (updated_entry.timestamp.isoformat(), updated_entry.source, updated_entry.log, log_id)
     )
     conn.commit()
     changes = conn.total_changes
     conn.close()
     return changes > 0
 
-def get_log(log_id: int) -> LogEntry:
+
+def get_log(log_id: int) -> LogEntry | None:
     """Retrieve a log entry by ID. Returns the log or None if not found."""
     conn = sqlite3.connect(DB_PATH)
     cursor = conn.cursor()
     cursor.execute(
-        "SELECT datetime, source, log FROM logs WHERE uid = ?", (log_id,)
+        "SELECT uid, datetime, source, log FROM logs WHERE uid = ?", (log_id,)
     )
     row = cursor.fetchone()
     conn.close()
     if row:
-        return LogEntry(datetime=row[0], source=row[1], log=row[2])
+        return LogEntry(uid=row[0], timestamp=row[1], source=row[2], log=row[3])  # Map fields correctly
     return None
 
 def get_all_logs() -> list[LogEntry]:
@@ -73,11 +75,11 @@ def get_all_logs() -> list[LogEntry]:
     cursor.execute("SELECT uid, datetime, source, log FROM logs ORDER BY datetime DESC")
     rows = cursor.fetchall()
     conn.close()
-    
+
     return [
         LogEntry(
             uid=row[0],
-            datetime=row[1],
+            timestamp=row[1],
             source=row[2],
             log=row[3]
         ) for row in rows
