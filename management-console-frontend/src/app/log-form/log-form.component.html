@@ -1,0 +1,24 @@
+<div class="container mt-4">
+    <h2>Add New Log</h2>
+    <form (ngSubmit)="submitLog()">
+      <div class="form-group">
+        <label for="source">Source</label>
+        <input type="text" 
+               class="form-control" 
+               id="source" 
+               [(ngModel)]="log.source" 
+               name="source" 
+               required>
+      </div>
+      <div class="form-group">
+        <label for="log">Log Content</label>
+        <textarea class="form-control" 
+                  id="log" 
+                  [(ngModel)]="log.log" 
+                  name="log" 
+                  rows="4" 
+                  required></textarea>
+      </div>
+      <button type="submit" class="btn btn-primary mt-3">Submit Log</button>
+    </form>
+  </div>

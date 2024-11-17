@@ -1,0 +1,19 @@
+<table>
+    <thead>
+      <tr>
+        <th>ID</th>
+        <th>Source</th>
+        <th>Log</th>
+        <th>Timestamp</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr *ngFor="let log of logs">
+        <td>{{ log.uid }}</td>
+        <td>{{ log.source }}</td>
+        <td>{{ log.log }}</td>
+        <td>{{ log.timestamp }}</td>
+      </tr>
+    </tbody>
+  </table>
+  
