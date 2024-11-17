@@ -119,5 +119,5 @@ if __name__ == "__main__":
     # Configure logging
     logging.basicConfig(level=logging.INFO)
     
-    # Run simulator for 1 minute by default
-    run_simulator(60)
+    # Run simulator for 30 sec by default
+    run_simulator(30)
