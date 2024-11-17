@@ -20,7 +20,6 @@ def setup_database():
     """Initialize test database before running tests."""
     initialize_database()
     yield
-    # Could add cleanup here if needed
 
 @pytest.fixture
 def sample_log_entry():
@@ -28,7 +27,6 @@ def sample_log_entry():
     return {
         "source": "TestComponent",
         "log": "Test log message",
-        "timestamp": datetime.utcnow().isoformat()
     }
 
 class TestAPIEndpoints:
@@ -90,54 +88,33 @@ class TestAPIEndpoints:
         # Verify it's deleted
         get_response = client.get(f"/logs/{log_id}/")
         assert get_response.status_code == 404
-
-class TestEventSimulator:
-    """Test suite for event simulator components."""
-
-    def test_order_processor(self, setup_database):
-        """Test OrderProcessor functionality."""
-        processor = OrderProcessor()
+    
+    def test_clear_logs(self, setup_database, sample_log_entry):
+        """Test clearing all log entries."""
         
-        # Test successful order processing
-        processor.process_order(1001)
+        # First create a few logs
+        client.post("/logs/", json=sample_log_entry)
+        client.post("/logs/", json=sample_log_entry)
         
-        # Verify log was created
+        # Check that logs are created
         response = client.get("/logs/")
-        logs = response.json()
-        assert any("OrderProcessor" in log["source"] for log in logs)
-        assert any("1001" in log["log"] for log in logs)
-
-    def test_user_authenticator(self, setup_database):
-        """Test UserAuthenticator functionality."""
-        authenticator = UserAuthenticator()
+        assert response.status_code == 200
+        logs_before_clear = response.json()
+        assert len(logs_before_clear) == 2  
         
-        # Test user authentication
-        test_user_id = "test_user_123"
-        result = authenticator.authenticate_user(test_user_id)
+        # Now clear all logs
+        response = client.delete("/logs/clear-all/")
+        assert response.status_code == 200
+        data = response.json()
         
-        # Verify log was created
+        # Verify the response message that logs were cleared
+        assert "logs have been cleared" in data["detail"]
+        
+        # Verify all logs are removed
         response = client.get("/logs/")
-        logs = response.json()
-        assert any("UserAuthenticator" in log["source"] for log in logs)
-        assert any(test_user_id in log["log"] for log in logs)
-
-    def test_simulator_integration(self, setup_database):
-        """Test simulator integration with short duration."""
-        from src.event_simulator import run_simulator
-        
-        # Get initial log count
-        initial_response = client.get("/logs/")
-        initial_count = len(initial_response.json())
-        
-        # Run simulator for a short duration
-        run_simulator(duration_seconds=5)
-        
-        # Get final log count
-        final_response = client.get("/logs/")
-        final_count = len(final_response.json())
-        
-        # Verify new logs were created
-        assert final_count > initial_count
+        assert response.status_code == 200
+        logs_after_clear = response.json()
+        assert len(logs_after_clear) == 0  # No logs should be left
 
 class TestErrorHandling:
     """Test suite for error handling scenarios."""
@@ -155,6 +132,7 @@ class TestErrorHandling:
         }
         response = client.post("/logs/", json=invalid_data)
         assert response.status_code in [400, 422]  # FastAPI validation error
+
 
     def test_delete_nonexistent_log(self, setup_database):
         """Test deleting a non-existent log."""

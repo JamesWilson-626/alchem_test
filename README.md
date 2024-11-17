@@ -10,11 +10,11 @@ pip install -r requirements.txt
 # Run
 #### Start API & Database
 ```
-python main.py
+python -m management_console.src.main
 ```
 #### Run Simulator
 ```
-python event_simulator.py
+python .\management_console\src\event_simulator.py
 ```
 ---
 # Test 

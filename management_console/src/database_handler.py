@@ -19,16 +19,22 @@ def initialize_database():
     conn.commit()
     conn.close()
 
-def add_log(entry: LogEntry):
-    """Insert a new log entry into the database."""
+def add_log(entry: LogEntry) -> LogEntry:
+    """Insert a new log entry into the database and return the full entry with the generated uid."""
     conn = sqlite3.connect(DB_PATH)
     cursor = conn.cursor()
     cursor.execute(
         "INSERT INTO logs (datetime, source, log) VALUES (?, ?, ?)",
         (entry.timestamp.isoformat(), entry.source, entry.log)  # Convert timestamp to ISO 8601 string
     )
+    # Get the UID of the last inserted row
+    entry_id = cursor.lastrowid
     conn.commit()
     conn.close()
+
+    # Return the LogEntry object with the generated uid
+    return LogEntry(uid=entry_id, source=entry.source, log=entry.log, timestamp=entry.timestamp)
+
 
 
 def delete_log(log_id: int) -> bool:
@@ -40,6 +46,16 @@ def delete_log(log_id: int) -> bool:
     changes = conn.total_changes
     conn.close()
     return changes > 0
+
+def clear_all_logs() -> int:
+    """Delete all log entries from the database and return the number of logs deleted."""
+    conn = sqlite3.connect(DB_PATH)
+    cursor = conn.cursor()
+    cursor.execute("DELETE FROM logs")
+    deleted_count = cursor.rowcount  # Get the number of deleted rows
+    conn.commit()
+    conn.close()
+    return deleted_count
 
 def update_log(log_id: int, updated_entry: LogEntry) -> bool:
     """Update a log entry by ID. Returns True if updated, False if not found."""

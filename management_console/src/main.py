@@ -2,15 +2,25 @@ from fastapi import FastAPI, HTTPException
 from typing import List
 from .models import LogEntry
 from . import database_handler
+from contextlib import asynccontextmanager
 
-app = FastAPI()
+# Define the lifespan event handler
+@asynccontextmanager
+async def lifespan(app: FastAPI):
+    # Startup logic
+    database_handler.initialize_database() 
+    yield
+
+
+app = FastAPI(lifespan=lifespan)
 
 # API Endpoints
 @app.post("/logs/", response_model=LogEntry)
 def add_log(entry: LogEntry):
     """Add a new log entry."""
-    database_handler.add_log(entry)
-    return entry
+    # Get the full entry, including the auto-generated uid
+    full_entry = database_handler.add_log(entry)
+    return full_entry
 
 @app.delete("/logs/{log_id}/")
 def delete_log(log_id: int):
@@ -38,11 +48,17 @@ def get_log(log_id: int):
 def get_all_logs():
     """Retrieve all log entries."""
     return database_handler.get_all_logs()
+    
+@app.delete("/logs/clear-all/")
+def clear_logs():
+    """Clear all log entries."""
+    deleted_count = database_handler.clear_all_logs()
+    
+    if deleted_count == 0:
+        raise HTTPException(status_code=500, detail="No logs found to clear.")
+    
+    return {"detail": f"{deleted_count} logs have been cleared from the database."}
 
-# Initialize the database when the app starts
-@app.on_event("startup")
-def on_startup():
-    database_handler.initialize_database()
 
 if __name__ == "__main__":
     import uvicorn
